@@ -1,6 +1,7 @@
 import sqlite3
 from sqlite3 import Error
 
+#! ***** MENU *****
 
 def menu():
     linha(40)
@@ -24,6 +25,8 @@ def linha(tam=120):
     print('-' * tam)
 
 
+#! ***** MENU 1 *****
+
 def create_connection(db_file):
     """ create a database connection to the SQLite database
         specified by db_file
@@ -40,6 +43,7 @@ def create_connection(db_file):
     
     return conn
 
+#! ***** MENU 2 *****
 
 def create_table(conn, create_table_sql):
     """ create a table from the create_table_sql statement
@@ -88,6 +92,7 @@ def main_create(db_file):
     
     return conn
 
+#! ***** MENU 3 *****
 
 def create_project(conn, project):
     """
@@ -135,6 +140,7 @@ def main_insert(db_file):
         create_task(conn, task_2)
     return conn
 
+#! ***** MENU 4 *****
 
 def update_task(conn, task):
     """
@@ -160,6 +166,7 @@ def main_update(db_file):
         update_task(conn, (2, '2015-01-04', '2015-01-06', 2))
     return conn
 
+#! ***** MENU 5 *****
 
 def select_all_tasks(conn):
     """
@@ -203,6 +210,7 @@ def main_select(db_file):
         select_all_tasks(conn)
     return conn
 
+#! ***** MENU 6 *****
 
 def delete_task(conn, id):
     """
