@@ -1,5 +1,7 @@
 import sqlite3
 from sqlite3 import Error
+import datetime
+
 
 #! ***** MENU *****
 
@@ -61,8 +63,7 @@ def create_table(conn, create_table_sql):
 def main_create(db_file):
     sql_create_projects_table = """CREATE TABLE IF NOT EXISTS projects (
                                    id integer PRIMARY KEY,
-                                   data date NOT NULL,
-                                   hora time NOT NULL,
+                                   data_hora datetime NOT NULL,
                                    latitude float NOT NULL,
                                    longitude float NOT NULL,
                                    accuracy tinyint NOT NULL
@@ -70,8 +71,7 @@ def main_create(db_file):
 
     sql_create_tasks_table = """CREATE TABLE IF NOT EXISTS tasks (
                                 project_id integer NOT NULL,
-                                data date NOT NULL,
-                                hora time NOT NULL,
+                                data_hora datetime NOT NULL,
                                 type tinytext NOT NULL,
                                 confidence tinyint NOT NULL,
                                 FOREIGN KEY (project_id) REFERENCES projects (id)
@@ -101,8 +101,8 @@ def create_project(conn, project):
     :param project:
     :return: project id
     """
-    sql = ''' INSERT INTO projects(data,hora,latitude,longitude,accuracy)
-              VALUES(?,?,?,?,?) '''
+    sql = ''' INSERT INTO projects(data_hora,latitude,longitude,accuracy)
+              VALUES(?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, project)
     return cur.lastrowid
@@ -116,26 +116,74 @@ def create_task(conn, task):
     :return:
     """
 
-    sql = ''' INSERT INTO tasks(project_id,data,hora,type,confidence)
-              VALUES(?,?,?,?,?) '''
+    sql = ''' INSERT INTO tasks(project_id,data_hora,type,confidence)
+              VALUES(?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, task)
     return cur.lastrowid
 
 
-def main_insert(db_file):
+def main_insert(db_file, json_data):
     # create a database connection
     conn = create_connection(db_file)
     with conn:
-        # create a new project
-        project = ('2016-10-08', '15:51:43', 41.0253814, -8.5526119, 15);
-        project_id = create_project(conn, project)
-
-        # tasks
-        task = (project_id, '2016-10-08', '15:51:47', 'STILL', 54)
-
-        # create tasks
-        create_task(conn, task)
+        
+        for local in json_data['locations']:
+            
+            state = True
+            
+            try:
+                _ = local['timestampMs']
+            except:
+                state = False
+            else:
+                _ = int(_[0:10])
+                timestampMs = datetime.datetime.utcfromtimestamp(_)
+            
+            try:
+                _ = local['latitudeE7']
+            except:
+                state = False
+            else:
+                latitudeE7 = float(_ / 10000000)
+                        
+            try:
+                _ = local['longitudeE7']
+            except:
+                state = False
+            else:
+                longitudeE7 = float(_ / 10000000)
+            
+            try:
+                _ = local['accuracy']
+            except:
+                state = False
+            else:
+                accuracy = int(_)
+            
+            if state:
+                project = (timestampMs, latitudeE7, longitudeE7, accuracy)
+                project_id = create_project(conn, project)
+            
+            state = True
+                    
+            try:
+                _ = local['activity']
+            except:
+                state = False
+            else:
+                _ts = _[0]['timestampMs']
+                _ts = int(_ts[0:10])
+                timestampMs = datetime.datetime.utcfromtimestamp(_ts)
+                
+                _ = _[0]['activity']
+                tipo = _[0]['type']
+                confidence = int(_[0]['confidence'])
+                    
+            if state:
+                task = (project_id, timestampMs, tipo, confidence)
+                create_task(conn, task)
+                    
     return conn
 
 #! ***** MENU 4 *****
@@ -243,3 +291,66 @@ def main_delete(db_file):
         # delete_all_tasks(conn);
     return conn
     
+#! ***** json_data *****
+
+count = 0
+
+def json_read(json_data):
+
+    for local in json_data['locations']:
+        
+        state = True
+        
+        try:
+            _ = local['timestampMs']
+        except:
+            state = False
+        else:
+            _ = int(_[0:10])
+            timestampMs = datetime.datetime.utcfromtimestamp(_)
+        
+        try:
+            _ = local['latitudeE7']
+        except:
+            state = False
+        else:
+            latitudeE7 = float(_ / 10000000)
+            
+                    
+        try:
+            _ = local['longitudeE7']
+        except:
+            state = False
+        else:
+            longitudeE7 = float(_ / 10000000)
+        
+        try:
+            _ = local['accuracy']
+        except:
+            state = False
+        else:
+            accuracy = int(_)
+                
+        """
+        try:
+            _ = local['activity']
+        except:
+            activity1.append(None)
+            activity2.append(None)
+            activity3.append(None)
+            
+        else:
+            _ts = _[0]['timestampMs']
+            _ts = int(_ts[0:10])
+            _ts = datetime.datetime.utcfromtimestamp(_ts)
+            activity1.append(_ts)
+            _ = _[0]['activity']
+            activity2.append(_[0]['type'])
+            activity3.append(_[0]['confidence'])
+        """
+        if state:
+            pass
+    
+    """
+    (timestampMs, latitudeE7, longitudeE7, accuracy)
+    """

@@ -1,8 +1,10 @@
 import sqlite3
 from sqlite3 import Error
 from data_base_func import *
+from data_base_json import *
 
 db_file = r'data.db'
+json_data = load_memory()
 
 if __name__ == '__main__':
     
@@ -15,7 +17,7 @@ if __name__ == '__main__':
         elif op == 2:
             conn = main_create(db_file)
         elif op == 3:
-            conn = main_insert(db_file)
+            conn = main_insert(db_file, json_data)
         elif op == 4:
             conn = main_update(db_file)
         elif op == 5:
