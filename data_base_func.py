@@ -66,14 +66,14 @@ def main_create(db_file):
                                    data_hora datetime NOT NULL,
                                    latitude float NOT NULL,
                                    longitude float NOT NULL,
-                                   accuracy tinyint NOT NULL
+                                   accuracy int NOT NULL
                                     );"""
 
     sql_create_tasks_table = """CREATE TABLE IF NOT EXISTS tasks (
                                 project_id integer NOT NULL,
                                 data_hora datetime NOT NULL,
-                                type tinytext NOT NULL,
-                                confidence tinyint NOT NULL,
+                                type text NOT NULL,
+                                confidence int NOT NULL,
                                 FOREIGN KEY (project_id) REFERENCES projects (id)
                                 );"""
 
@@ -290,67 +290,3 @@ def main_delete(db_file):
         delete_task(conn, 2);
         # delete_all_tasks(conn);
     return conn
-    
-#! ***** json_data *****
-
-count = 0
-
-def json_read(json_data):
-
-    for local in json_data['locations']:
-        
-        state = True
-        
-        try:
-            _ = local['timestampMs']
-        except:
-            state = False
-        else:
-            _ = int(_[0:10])
-            timestampMs = datetime.datetime.utcfromtimestamp(_)
-        
-        try:
-            _ = local['latitudeE7']
-        except:
-            state = False
-        else:
-            latitudeE7 = float(_ / 10000000)
-            
-                    
-        try:
-            _ = local['longitudeE7']
-        except:
-            state = False
-        else:
-            longitudeE7 = float(_ / 10000000)
-        
-        try:
-            _ = local['accuracy']
-        except:
-            state = False
-        else:
-            accuracy = int(_)
-                
-        """
-        try:
-            _ = local['activity']
-        except:
-            activity1.append(None)
-            activity2.append(None)
-            activity3.append(None)
-            
-        else:
-            _ts = _[0]['timestampMs']
-            _ts = int(_ts[0:10])
-            _ts = datetime.datetime.utcfromtimestamp(_ts)
-            activity1.append(_ts)
-            _ = _[0]['activity']
-            activity2.append(_[0]['type'])
-            activity3.append(_[0]['confidence'])
-        """
-        if state:
-            pass
-    
-    """
-    (timestampMs, latitudeE7, longitudeE7, accuracy)
-    """
