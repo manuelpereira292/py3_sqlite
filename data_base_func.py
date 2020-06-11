@@ -59,22 +59,22 @@ def create_table(conn, create_table_sql):
 
 
 def main_create(db_file):
-    sql_create_projects_table = """ CREATE TABLE IF NOT EXISTS projects (
-                                        id integer PRIMARY KEY,
-                                        name text NOT NULL,
-                                        begin_date text,
-                                        end_date text
-                                    ); """
+    sql_create_projects_table = """CREATE TABLE IF NOT EXISTS projects (
+                                   id integer PRIMARY KEY,
+                                   data date NOT NULL,
+                                   hora time NOT NULL,
+                                   latitude float NOT NULL,
+                                   longitude float NOT NULL,
+                                   accuracy tinyint NOT NULL
+                                    );"""
 
     sql_create_tasks_table = """CREATE TABLE IF NOT EXISTS tasks (
-                                    id integer PRIMARY KEY,
-                                    name text NOT NULL,
-                                    priority integer,
-                                    status_id integer NOT NULL,
-                                    project_id integer NOT NULL,
-                                    begin_date text NOT NULL,
-                                    end_date text NOT NULL,
-                                    FOREIGN KEY (project_id) REFERENCES projects (id)
+                                project_id integer NOT NULL,
+                                data date NOT NULL,
+                                hora time NOT NULL,
+                                type tinytext NOT NULL,
+                                confidence tinyint NOT NULL,
+                                FOREIGN KEY (project_id) REFERENCES projects (id)
                                 );"""
 
     # create a database connection
@@ -101,8 +101,8 @@ def create_project(conn, project):
     :param project:
     :return: project id
     """
-    sql = ''' INSERT INTO projects(name,begin_date,end_date)
-              VALUES(?,?,?) '''
+    sql = ''' INSERT INTO projects(data,hora,latitude,longitude,accuracy)
+              VALUES(?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, project)
     return cur.lastrowid
@@ -116,8 +116,8 @@ def create_task(conn, task):
     :return:
     """
 
-    sql = ''' INSERT INTO tasks(name,priority,status_id,project_id,begin_date,end_date)
-              VALUES(?,?,?,?,?,?) '''
+    sql = ''' INSERT INTO tasks(project_id,data,hora,type,confidence)
+              VALUES(?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, task)
     return cur.lastrowid
@@ -128,16 +128,14 @@ def main_insert(db_file):
     conn = create_connection(db_file)
     with conn:
         # create a new project
-        project = ('Cool App with SQLite & Python', '2015-01-01', '2015-01-30');
+        project = ('2016-10-08', '15:51:43', 41.0253814, -8.5526119, 15);
         project_id = create_project(conn, project)
 
         # tasks
-        task_1 = ('Analyze the requirements of the app', 1, 1, project_id, '2015-01-01', '2015-01-02')
-        task_2 = ('Confirm with user about the top requirements', 1, 1, project_id, '2015-01-03', '2015-01-05')
+        task = (project_id, '2016-10-08', '15:51:47', 'STILL', 54)
 
         # create tasks
-        create_task(conn, task_1)
-        create_task(conn, task_2)
+        create_task(conn, task)
     return conn
 
 #! ***** MENU 4 *****
