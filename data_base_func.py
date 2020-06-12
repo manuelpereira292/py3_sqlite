@@ -66,7 +66,8 @@ def main_create(db_file):
                                    data_hora datetime NOT NULL,
                                    latitude float NOT NULL,
                                    longitude float NOT NULL,
-                                   accuracy int NOT NULL
+                                   accuracy int NOT NULL,
+                                   info bool NOT NULL                                  
                                     );"""
 
     sql_create_tasks_table = """CREATE TABLE IF NOT EXISTS tasks (
@@ -101,8 +102,8 @@ def create_project(conn, project):
     :param project:
     :return: project id
     """
-    sql = ''' INSERT INTO projects(data_hora,latitude,longitude,accuracy)
-              VALUES(?,?,?,?) '''
+    sql = ''' INSERT INTO projects(data_hora,latitude,longitude,accuracy,info)
+              VALUES(?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, project)
     return cur.lastrowid
@@ -130,12 +131,12 @@ def main_insert(db_file, json_data):
         
         for local in json_data['locations']:
             
-            state = True
+            state1 = state2 = True
             
             try:
                 _ = local['timestampMs']
             except:
-                state = False
+                state1 = False
             else:
                 _ = int(_[0:10])
                 timestampMs = datetime.datetime.utcfromtimestamp(_)
@@ -143,46 +144,43 @@ def main_insert(db_file, json_data):
             try:
                 _ = local['latitudeE7']
             except:
-                state = False
+                state1 = False
             else:
                 latitudeE7 = float(_ / 10000000)
                         
             try:
                 _ = local['longitudeE7']
             except:
-                state = False
+                state1 = False
             else:
                 longitudeE7 = float(_ / 10000000)
             
             try:
                 _ = local['accuracy']
             except:
-                state = False
+                state1 = False
             else:
                 accuracy = int(_)
             
-            if state:
-                project = (timestampMs, latitudeE7, longitudeE7, accuracy)
-                project_id = create_project(conn, project)
-            
-            state = True
-                    
             try:
                 _ = local['activity']
             except:
-                state = False
+                state2 = False
             else:
                 _ts = _[0]['timestampMs']
                 _ts = int(_ts[0:10])
-                timestampMs = datetime.datetime.utcfromtimestamp(_ts)
-                
+                tsMs = datetime.datetime.utcfromtimestamp(_ts)
                 _ = _[0]['activity']
                 tipo = _[0]['type']
                 confidence = int(_[0]['confidence'])
                     
-            if state:
-                task = (project_id, timestampMs, tipo, confidence)
-                create_task(conn, task)
+            if state1:
+                project = (timestampMs, latitudeE7, longitudeE7, accuracy, state2)
+                project_id = create_project(conn, project)
+            
+                if state2:
+                    task = (project_id, tsMs, tipo, confidence)
+                    create_task(conn, task)
                     
     return conn
 
