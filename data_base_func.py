@@ -237,7 +237,7 @@ def select_task_by_priority(conn, priority):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT * FROM tasks WHERE priority=?", (priority,))
+    cur.execute("SELECT * FROM tasks WHERE confidence=?", (priority,))
 
     rows = cur.fetchall()
 
@@ -250,7 +250,7 @@ def main_select(db_file):
     conn = create_connection(db_file)
     with conn:
         print("1. Query task by priority:")
-        select_task_by_priority(conn, 1)
+        select_task_by_priority(conn, 100)
 
         print("2. Query all tasks")
         select_all_tasks(conn)
