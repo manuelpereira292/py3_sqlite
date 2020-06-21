@@ -1,6 +1,7 @@
 import sqlite3
 from sqlite3 import Error
 import datetime
+from math import pi, acos, cos, sin
 
 
 #! ***** MENU *****
@@ -67,7 +68,9 @@ def main_create(db_file):
                                    latitude float NOT NULL,
                                    longitude float NOT NULL,
                                    accuracy int NOT NULL,
-                                   info bool NOT NULL                                  
+                                   info bool NOT NULL,
+                                   distancia float NOT NULL,
+                                   tempo time NOT NULL                                  
                                     );"""
 
     sql_create_tasks_table = """CREATE TABLE IF NOT EXISTS tasks (
@@ -102,8 +105,8 @@ def create_project(conn, project):
     :param project:
     :return: project id
     """
-    sql = ''' INSERT INTO projects(data_hora,latitude,longitude,accuracy,info)
-              VALUES(?,?,?,?,?) '''
+    sql = ''' INSERT INTO projects(data_hora,latitude,longitude,accuracy,info,distancia,tempo)
+              VALUES(?,?,?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, project)
     return cur.lastrowid
@@ -124,10 +127,48 @@ def create_task(conn, task):
     return cur.lastrowid
 
 
+def distancia(la1, la2, lo1, lo2):
+    """
+    #* Fórmula:
+    #* Diâmetro da terra = 6378.137 Km
+    #* coordenadas (latitude e longitude) em radianos
+    #* distancia = d_terra * acos(cos(lat1) * cos(lat2) * cos(long2 - long1) + sin(lat1) * sin(lat2))
+    #* acos(-1 <= x <= 1) // erro: 1.0000000000000002
+    #* distancia = x Km
+    """
+    
+    def radianos(coordenada):
+            return coordenada * pi / 180
+    
+    d_terra = 6378.137
+    la1 = radianos(la1)
+    la2 = radianos(la2)
+    lo1 = radianos(lo1)
+    lo2 = radianos(lo2)
+    
+    _ = cos(la1) * cos(la2) * cos(lo2 - lo1) + sin(la1) * sin(la2)
+    
+    if _ == 1.0000000000000002:
+        _ = 1.0
+        
+    _ = acos(_)  
+    
+    dist = d_terra * _
+    dist = round(dist, 3)
+    return dist
+
+
+def tempo_convert(t):
+    t = str(t)
+    return datetime.datetime.strptime(t, '%Y-%m-%d %H:%M:%S')
+
+
 def main_insert(db_file, json_data):
     # create a database connection
     conn = create_connection(db_file)
     with conn:
+        
+        count = 1
         
         for local in json_data['locations']:
             
@@ -173,9 +214,35 @@ def main_insert(db_file, json_data):
                 _ = _[0]['activity']
                 tipo = _[0]['type']
                 confidence = int(_[0]['confidence'])
-                    
+            
             if state1:
-                project = (timestampMs, latitudeE7, longitudeE7, accuracy, state2)
+                if count == 1:
+                    lat1 = lat2 = latitudeE7
+                    lon1 = lon2 = longitudeE7
+                    dist_atual = dist_ant = 0
+                    
+                    tempo_atual = tempo_convert(timestampMs)
+                    tempo_ant = tempo_atual
+                    tempo = tempo_atual - tempo_ant
+                else:
+                    lat1 = lat2
+                    lon1 = lon2
+                    lat2 = latitudeE7
+                    lon2 = longitudeE7
+                    dist_ant = dist_atual
+                
+                    tempo_atual = tempo_convert(timestampMs)
+                    tempo = tempo_atual - tempo_ant
+                    tempo_ant = tempo_atual
+                
+                dist_atual = distancia(lat1, lat2, lon1, lon2)
+                count += 1
+                
+                tempo = str(tempo)
+                print(tempo)
+                
+                
+                project = (timestampMs, latitudeE7, longitudeE7, accuracy, state2, dist_atual, tempo)
                 project_id = create_project(conn, project)
             
                 if state2:
