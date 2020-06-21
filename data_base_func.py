@@ -223,7 +223,7 @@ def main_insert(db_file, json_data):
                     
                     tempo_atual = tempo_convert(timestampMs)
                     tempo_ant = tempo_atual
-                    tempo = tempo_atual - tempo_ant
+                    tempo = str(tempo_atual - tempo_ant)
                 else:
                     lat1 = lat2
                     lon1 = lon2
@@ -232,15 +232,11 @@ def main_insert(db_file, json_data):
                     dist_ant = dist_atual
                 
                     tempo_atual = tempo_convert(timestampMs)
-                    tempo = tempo_atual - tempo_ant
+                    tempo = str(tempo_atual - tempo_ant)
                     tempo_ant = tempo_atual
                 
                 dist_atual = distancia(lat1, lat2, lon1, lon2)
                 count += 1
-                
-                tempo = str(tempo)
-                print(tempo)
-                
                 
                 project = (timestampMs, latitudeE7, longitudeE7, accuracy, state2, dist_atual, tempo)
                 project_id = create_project(conn, project)
